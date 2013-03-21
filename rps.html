@@ -1,0 +1,174 @@
+<!doctype html>
+<html ng-app="app">
+  <header>
+  
+  <style type='text/css'>
+  /* MUST HAVE WIDTH/HEIGHT */
+  .ace-editor {
+    width:100%;
+    height:200px;
+  }
+
+  #contents {
+    width:50%;
+    height:50%;
+    position:absolute;
+    top:0;
+  }
+</style>
+<script src="angular.min.js"></script>
+<script src="angular-resource.min.js"></script>
+<script src="jquery.min.js"></script>
+<script src="angular-ace.js"></script>
+<script src="ace.js" type="text/javascript" charset="utf-8"></script>
+
+<script language="javascript" type="text/javascript">
+    angular.module('myApp', ['ngResource','ace']);
+
+    function FirstController($scope, $resource){ 
+        $scope.supported_langugages = [
+          {language : 'java', urlName : 'java' },
+          {language : 'js', urlName : 'js' },
+        ];
+
+        $scope.language = 'python';
+
+                //Some example code for each language.
+        $scope.d = {"java":{"solution":"int a = 2;\nint b = 5;\nint c=a+1;\na=8+b-c;",
+                          "tests":"assertEquals(10,a);\nassertEquals(3,c)"},
+                     "js":{"solution":"a=1;\nb=7;",
+                          "tests":"assert_equal(1,a);\nassert_equal(2,b);"},
+                    }
+
+
+        $scope.status = "Ready"
+        //Load some good code
+        $scope.load_example_code = function(){
+          $scope.solution = $scope.d[$scope.language]["solution"];
+          $scope.tests = $scope.d[$scope.language]["tests"];
+        };
+
+
+        // For the loadbalancer version with fewer options. 
+        $scope.VerifierModel = $resource('http://ec2-54-251-193-188.ap-southeast-1.compute.amazonaws.com/:language',
+                                {},{'get': {method: 'JSONP', isArray: false, params:{vcallback: 'JSON_CALLBACK'}}
+                                   }
+                            );
+        /*
+        $scope.VerifierModel = $resource('http://54.251.51.97/:language',
+                                {},{'get': {method: 'JSONP', isArray: false, params:{vcallback: 'JSON_CALLBACK'}}
+                                   }
+                            );
+        */
+        $scope.verify = function(){
+          data = {solution: $scope.solution, tests: $scope.tests}
+          //jsonrequest = JSON.stringify(data) 
+          jsonrequest = btoa(JSON.stringify(data));
+
+          $scope.status = "Verifying"
+          //$scope.solution = "y=5"
+          $scope.VerifierModel.get({'language':$scope.language,
+                                    'jsonrequest':jsonrequest},
+                function(response) { 
+                  $scope.result = response;
+                   $scope.status = "Ready"
+                });  
+        };
+
+      }
+</script>
+  
+  
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.1/angular.js"></script>
+    <script language="javascript" type="text/javascript">
+      angular.module('app', []);
+      
+      //Whatever you put on the controller scope,
+      //will be availalble in the HTML element bound to the controller.
+      function MyController($scope){
+        $scope.newMessage = "rock";
+        $scope.messages = ["Rock wins", "Paper wins"]; 
+        
+        $scope.rps = function(){
+          var userChoice = $scope.newMessage;
+          //prompt("Do you choose rock, paper or scissors?");
+
+          var computerChoice = Math.random();
+          
+          if (computerChoice < 0.34)
+          computerChoice = "rock";
+          else if (computerChoice < 0.67)
+          computerChoice = "paper";
+          else
+          computerChoice = "scissors";
+          
+          console.log(computerChoice);
+          
+          var msg = "";
+          
+          if (computerChoice === userChoice){
+            msg = "its a tie!";
+          } else if (userChoice != "rock" && userChoice != "paper" && 
+            userChoice != "scissors"){
+              msg = "invalid move!";
+          }
+          
+          else if (computerChoice === "rock"){
+            if (userChoice === "paper"){
+              msg = "paper wins";
+          	}else {
+          		msg = "rock wins";
+          	}
+          }
+          
+          else if (computerChoice === "paper"){
+          	if (userChoice === "rock"){
+          		msg = "paper wins";
+          	}else {
+          		msg = "scissors wins";
+          	}
+          }
+          
+          else if (computerChoice === "scissors"){
+          	if (userChoice === "paper"){
+          		msg = "scissors wins";
+          	}else {
+          		msg = "rock wins";
+          	}
+          } 
+          
+          $scope.newMessage = msg;
+          
+          //$scope.add = function(){
+            $scope.messages.push($scope.newMessage);
+          //};
+        };
+        
+
+      }
+    </script>
+  </header>
+  
+  <body ng-controller="MyController">
+    <font size='20px'>Do something!</font><br>
+    Choose Rock, Paper or Scissors:<br>     
+    <input type="text" ng-model="newMessage">
+    <input type="submit" ng-click="rps()" value="new move">
+    <br>
+    Wins: <br>
+    <ul>
+      <li ng-repeat="message in messages">
+        {{message}}
+      </li>
+    </ul>
+    <form action = "./thankyou_play.html">
+    <input type="submit" value="End Game">
+    </form>
+    
+    <a href="./index.html">Home</a><br>
+    <a href="./signup.html">Sign Up</a><br>
+    <a href="./share.html">Share</a> this page<br>
+    
+  </body>
+  
+</html>
